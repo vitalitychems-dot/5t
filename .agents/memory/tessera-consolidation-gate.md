@@ -3,7 +3,7 @@ name: Tessera consolidation gate
 description: Scope, source-retention, and completion rules for the Tessera multi-repository migration.
 ---
 
-For this migration, Grok-ready is the final repository and TX is the staging repository. The owner’s rule is “include everything; remove only redundancy.” Account for distinct contributions and content; differences between versions are not duplicates by filename alone. Review excluded LFS archives, original images, vault data, and runtime records before calling the migration complete.
+For this migration, Grok-ready is the final destination; do not use TX as an intermediate destination. The owner’s rule is “include everything; remove only redundancy.” Account for distinct contributions and content; differences between versions are not duplicates by filename alone. Review excluded LFS archives, original images, vault data, and runtime records before calling the migration complete.
 
 The user’s intended end state is a complete, working Grok-ready consolidation of all distinct public-safe work, with only verified redundancy removed. They want old-source files retired as their contents are incorporated. Treat this as the migration goal, not authorization to publish protected material or delete unverified source data.
 
