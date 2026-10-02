@@ -12,11 +12,12 @@ describe("moltbook-bridge sandbox boundary", () => {
     expect(source).not.toMatch(/require\s*\(\s*["']@workspace/);
   });
 
-  it("must not import from relative internal paths (../ or ./)", () => {
-    expect(source).not.toMatch(/import\s+.*from\s+["']\.\.\//);
-    expect(source).not.toMatch(/import\s+.*from\s+["']\.\//);
-    expect(source).not.toMatch(/require\s*\(\s*["']\.\.\//);
-    expect(source).not.toMatch(/require\s*\(\s*["']\.\//);
+  it("may import only the approved Shepherd policy helper from internal paths", () => {
+    const relativeImports = Array.from(
+      source.matchAll(/(?:from\s+|require\s*\(\s*)["'](\.\.?\/[^"']+)["']/g),
+      (match) => match[1],
+    );
+    expect(relativeImports).toEqual(["./shepherd-outbound"]);
   });
 
   it("must not access process.env (secrets must stay outside sandbox)", () => {

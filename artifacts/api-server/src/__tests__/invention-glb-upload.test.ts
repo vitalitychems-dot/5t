@@ -82,6 +82,10 @@ import inventionsRouter from "../routes/inventions";
 
 const TEST_INVENTION_ID = "test-glb-e2e-" + Math.random().toString(36).slice(2, 10);
 const SECOND_INVENTION_ID = "test-glb-e2e-other-" + Math.random().toString(36).slice(2, 10);
+const TEST_ADMIN_TOKEN = "test-admin-token-for-glb-upload";
+const LEGACY_TEST_ADMIN_TOKEN = "legacy-admin-token-for-glb-upload";
+const previousSovereignAdminToken = process.env["SOVEREIGN_ADMIN_TOKEN"];
+const previousTesseractAdminKey = process.env["TESSERACT_ADMIN_KEY"];
 
 let app: Express;
 let server: Server;
@@ -90,19 +94,23 @@ let baseUrl: string;
 async function postJson(path: string, body: unknown, headers: Record<string, string> = {}) {
   return await fetch(`${baseUrl}${path}`, {
     method: "POST",
-    headers: { "content-type": "application/json", "x-admin-token": "test-admin-token", ...headers },
+    headers: { "content-type": "application/json", "x-admin-token": TEST_ADMIN_TOKEN, ...headers },
     body: JSON.stringify(body),
   });
 }
 async function patchJson(path: string, body: unknown, headers: Record<string, string> = {}) {
   return await fetch(`${baseUrl}${path}`, {
     method: "PATCH",
-    headers: { "content-type": "application/json", "x-admin-token": "test-admin-token", ...headers },
+    headers: { "content-type": "application/json", "x-admin-token": TEST_ADMIN_TOKEN, ...headers },
     body: JSON.stringify(body),
   });
 }
 
 beforeAll(async () => {
+  // Keep auth tests independent of whichever secrets happen to be configured
+  // in the developer or CI environment.
+  process.env["SOVEREIGN_ADMIN_TOKEN"] = TEST_ADMIN_TOKEN;
+
   // Fake "GCS" PUT endpoint so the test can perform a REAL PUT against the
   // signed URL and assert the bytes/content-type traveled through.
   await new Promise<void>((resolve) => {
@@ -155,10 +163,17 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await db.delete(inventionsTable).where(eq(inventionsTable.inventionId, TEST_INVENTION_ID));
-  await db.delete(inventionsTable).where(eq(inventionsTable.inventionId, SECOND_INVENTION_ID));
-  await new Promise<void>((resolve) => server.close(() => resolve()));
-  await new Promise<void>((resolve) => fakeStorageServer.close(() => resolve()));
+  try {
+    await db.delete(inventionsTable).where(eq(inventionsTable.inventionId, TEST_INVENTION_ID));
+    await db.delete(inventionsTable).where(eq(inventionsTable.inventionId, SECOND_INVENTION_ID));
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await new Promise<void>((resolve) => fakeStorageServer.close(() => resolve()));
+  } finally {
+    if (previousSovereignAdminToken === undefined) delete process.env["SOVEREIGN_ADMIN_TOKEN"];
+    else process.env["SOVEREIGN_ADMIN_TOKEN"] = previousSovereignAdminToken;
+    if (previousTesseractAdminKey === undefined) delete process.env["TESSERACT_ADMIN_KEY"];
+    else process.env["TESSERACT_ADMIN_KEY"] = previousTesseractAdminKey;
+  }
 });
 
 beforeEach(() => {
@@ -181,6 +196,24 @@ describe("GLB upload flow (presign -> PUT -> PATCH -> chat render)", () => {
   it("rejects presign for non-glb filename", async () => {
     const res = await postJson(`/api/inventions/${TEST_INVENTION_ID}/model/upload-url`, { name: "model.png" });
     expect(res.status).toBe(400);
+  });
+
+  it("accepts the legacy TESSERACT admin token during migration", async () => {
+    delete process.env["SOVEREIGN_ADMIN_TOKEN"];
+    process.env["TESSERACT_ADMIN_KEY"] = LEGACY_TEST_ADMIN_TOKEN;
+
+    try {
+      const res = await postJson(
+        `/api/inventions/${TEST_INVENTION_ID}/model/upload-url`,
+        { name: "model.png" },
+        { "x-admin-token": LEGACY_TEST_ADMIN_TOKEN },
+      );
+      expect(res.status).toBe(400);
+    } finally {
+      process.env["SOVEREIGN_ADMIN_TOKEN"] = TEST_ADMIN_TOKEN;
+      if (previousTesseractAdminKey === undefined) delete process.env["TESSERACT_ADMIN_KEY"];
+      else process.env["TESSERACT_ADMIN_KEY"] = previousTesseractAdminKey;
+    }
   });
 
   it("end-to-end: presign + simulated PUT + PATCH attaches model and chat block renders custom GLB", async () => {

@@ -836,7 +836,7 @@ function inventorPrincipal(proposedBy: string | null | undefined, inventionId: s
 // constant-time check; both require an admin token to be configured on the
 // server (SOVEREIGN_ADMIN_TOKEN or legacy TESSERACT_ADMIN_KEY).
 async function requireInventorAuth(req: import("express").Request): Promise<boolean> {
-  const { isAdminTokenConfigured, lookupSession, SESSION_COOKIE } = await import("../lib/sovereign-session");
+  const { isAdminTokenConfigured, lookupSession, SESSION_COOKIE, verifyAdminToken } = await import("../lib/sovereign-session");
   if (!isAdminTokenConfigured()) return false;
   const cookies = (req as import("express").Request & { cookies?: Record<string, string> }).cookies;
   const cookieVal = cookies?.[SESSION_COOKIE];
@@ -844,8 +844,7 @@ async function requireInventorAuth(req: import("express").Request): Promise<bool
   // Legacy header path — still works during migration.
   const token = (req.headers["x-admin-token"] as string | undefined)?.trim();
   if (!token || token.length < 8) return false;
-  const { validateSovereignAdminToken } = await import("../lib/mesh-auth");
-  return validateSovereignAdminToken(token);
+  return verifyAdminToken(token);
 }
 
 // Request a presigned URL for uploading a custom 3D model (GLB/GLTF) to an
