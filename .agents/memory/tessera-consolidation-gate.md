@@ -19,6 +19,10 @@ Generated migration evidence is content too: comparison patches, manifests, scre
 
 **How to apply:** before publishing migration evidence, scan text and binary artifacts for personal records; consider history rewrite only as a separate owner-approved action.
 
+**Why:** source UI fixtures and screenshots can contain unredacted personal text or credential flows even when filenames and basic secret-pattern scans appear harmless.
+
+**How to apply:** inspect embedded dialogue, fixtures, and media visually or with privacy-preserving OCR before publishing; never expose raw OCR text or copy a source variant that removes destination redactions.
+
 **Why:** the user restated that all distinct contributions should end in the working final repo and old sources should be retired as verified copies land.
 
 **How to apply:** track each source item to its target path/hash and disposition. Keep protected items out of the public target; do not retire source material until its safe destination and the migration sign-off/deletion gate are satisfied.
