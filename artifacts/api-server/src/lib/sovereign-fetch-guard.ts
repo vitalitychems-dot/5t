@@ -26,16 +26,13 @@ export function runWithShepherdContext<T>(caller: string, fn: () => Promise<T> |
 }
 
 function shouldBypass(url: string): boolean {
-  // Allow loopback to ourselves (internal route -> route calls inside the app)
-  // and the explicit Replit dev domain proxy.
+  // Allow loopback to ourselves (internal route -> route calls inside the app).
   try {
     const u = new URL(url);
-    if (u.hostname === "localhost" || u.hostname === "127.0.0.1" || u.hostname === "0.0.0.0") return true;
-    if (u.hostname.endsWith(".replit.dev") || u.hostname.endsWith(".repl.co")) return true;
+    return ["localhost", "127.0.0.1", "0.0.0.0", "[::1]"].includes(u.hostname);
   } catch {
-    return true; // non-URL inputs (relative) — let through
+    return false;
   }
-  return false;
 }
 
 export function installSovereignFetchGuard(): void {
@@ -46,7 +43,7 @@ export function installSovereignFetchGuard(): void {
   }
   originalFetch = globalThis.fetch.bind(globalThis);
 
-  const guarded: typeof fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+  const guarded: typeof fetch = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
     const url = typeof input === "string"
       ? input
       : input instanceof URL
