@@ -1,6 +1,7 @@
 import { db } from "@workspace/db";
 import { securityAuditLog } from "@workspace/db/schema";
 import { logger } from "./logger";
+import { runWithShepherdContext } from "./sovereign-fetch-guard";
 
 export interface ExternalRequestOptions {
   method?: string;
@@ -44,6 +45,14 @@ const ALLOWED_DOMAINS: string[] = [
 ];
 
 const DEFAULT_TIMEOUT_MS = 10_000;
+
+async function fetchAllowlistedExternal(url: string, init: RequestInit): Promise<Response> {
+  return await runWithShepherdContext(
+    "shepherd-proxy",
+    () => fetch(url, init),
+    "secureExternalWrapper allowlisted request",
+  );
+}
 
 const INTRUSION_WINDOW_MS = 60_000;
 const INTRUSION_THRESHOLD = 30;
@@ -160,7 +169,7 @@ export async function secureExternalFetch(
   let body = "";
 
   try {
-    const res = await fetch(url, {
+    const res = await fetchAllowlistedExternal(url, {
       method,
       headers: options.headers,
       body: options.body,
@@ -257,7 +266,7 @@ export async function secureExternalStreamingFetch(
   const start = Date.now();
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchAllowlistedExternal(url, {
       method,
       headers: options.headers,
       body: options.body,
@@ -360,7 +369,7 @@ export async function secureExternalBinaryFetch(
   const start = Date.now();
 
   try {
-    const res = await fetch(url, {
+    const res = await fetchAllowlistedExternal(url, {
       method,
       headers: options.headers,
       signal: controller.signal,
