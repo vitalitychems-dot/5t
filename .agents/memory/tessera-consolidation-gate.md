@@ -30,3 +30,11 @@ Generated migration evidence is content too: comparison patches, manifests, scre
 **Why:** on 2026-10-03 the owner explicitly excluded crypto, trading, arbitrage, finance, Vitality, and store-related work from the public destination.
 
 **How to apply:** exclude those categories from migration candidates, but do not delete source repositories or files until the exact deletion list is reviewed and confirmed.
+
+## Cross-session coordination
+
+Shared GitHub issues are a written handoff, not a live connection to other agent sessions. Each lane must be prompted in its own open session and must leave a lane-labeled reply before it is counted as participating. If lanes post under the same GitHub account, the label in the comment does not independently authenticate which session wrote it.
+
+**Why:** the owner clarified that posting on the Board does not wake Cursor, Grok Bot, or Replit; each lane must read and answer the shared issue from its own session.
+
+**How to apply:** report which lane-labeled comments are present separately from whether the author identity is independently verified. Never claim cross-session connectivity based only on the current session's ability to read or write GitHub.
