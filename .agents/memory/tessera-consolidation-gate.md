@@ -38,3 +38,9 @@ Shared GitHub issues are a written handoff, not a live connection to other agent
 **Why:** the owner clarified that posting on the Board does not wake Cursor, Grok Bot, or Replit; each lane must read and answer the shared issue from its own session.
 
 **How to apply:** report which lane-labeled comments are present separately from whether the author identity is independently verified. Never claim cross-session connectivity based only on the current session's ability to read or write GitHub.
+
+Keep the coordination repository private. Never make it public or share a token to let another lane access it; give that lane a pasteable prompt in its own session instead.
+
+**Why:** the owner explicitly said Cursor cannot access the private board and prohibited changing repo visibility or sending it a token.
+
+**How to apply:** treat the issue as a written handoff, not a permission to broaden access. If another lane cannot read it, relay only the needed text through that lane's session.
